@@ -16,7 +16,6 @@ import spotipy.util as util
 
 from spotibox import settings
 
-
 logging_conf_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '../logging.conf'))
 logging.config.fileConfig(logging_conf_path)
 log = logging.getLogger(__name__)
@@ -57,7 +56,6 @@ def main():
                 except MaxRetryError:
                     log.warning("Can not reach %s:%s", settings.SPOTIBOX_SERVER_HOST, settings.SPOTIBOX_SERVER_PORT)
                     continue
-
                  
                 log.info('Wait for device %s to appear in device list: %s', device_name, spotify_devices)
 
@@ -98,10 +96,16 @@ def main():
 
                 if previous_playing == rfid and (time.time() - time_since_pause) < 5 :
                     log.info("Resume Playback!")
-
-                    spotify_client.start_playback(deviceId, None, None, None)
-                    currently_playing = previous_playing
-                    previous_playing = ""
+                    try:
+                        spotify_client.start_playback(deviceId, None, None, None)
+                        currently_playing = previous_playing    
+                        previous_playing = ""
+                    except ConnectionError:
+                        log.warning("Can not reach spotify api")
+                        continue
+                    except MaxRetryError:
+                        log.warning("Can not reach spotify api")
+                        continue
                     continue
 
                 if currently_playing != rfid:
@@ -109,10 +113,8 @@ def main():
                     	r = requests.get(settings.SPOTIBOX_SERVER_HOST + ":" + settings.SPOTIBOX_SERVER_PORT + "/api/box/mapping/" + rfid)
                     except ConnectionError:
                         log.warning("Can not reach %s:%s", settings.SPOTIBOX_SERVER_HOST, settings.SPOTIBOX_SERVER_PORT)
-                        continue
                     except MaxRetryError:
                         log.warning("Can not reach %s:%s", settings.SPOTIBOX_SERVER_HOST, settings.SPOTIBOX_SERVER_PORT) 
-                        continue
 
                     if r.status_code == 200:
                         album_meta = r.json()
@@ -145,17 +147,27 @@ def main():
                                 
                                 if spotify_uri_type == 'track':
                                     log.info("Play Track")
-                                    spotify_client.start_playback(deviceId, None,[spotify_uri],None)
-                                    currently_playing=rfid
+                                    try:
+                                        spotify_client.start_playback(deviceId, None,[spotify_uri],None)
+                                        currently_playing=rfid
+                                    except ConnectionError:
+                                        log.warning("Can not reach spotify api")
+                                    except MaxRetryError:
+                                        log.warning("Can not reach spotify api")                                 
 
                                 elif spotify_uri_type == 'album':
                                     log.info("Play Album")
-                                      
-                                    spotify_album_offset = album_meta['offset']
-                                    offset={}
-                                    offset['position'] = album_meta['offset']
-                                    spotify_client.start_playback(deviceId, spotify_uri, None, offset)
-                                    currently_playing = rfid
+                                    try:  
+                                        spotify_album_offset = album_meta['offset']
+                                        offset={}
+                                        offset['position'] = album_meta['offset']
+                                        spotify_client.start_playback(deviceId, spotify_uri, None, offset)
+                                        currently_playing = rfid
+                                    except ConnectionError:
+                                        log.warning("Can not reach spotify api")
+                                    except MaxRetryError:
+                                        log.warning("Can not reach spotify api")                                 
+
                                 else:
                                     log.warning("Not handled URI type: %s for uri %s ",spotify_uri_type, spotify_uri)
                             else:
@@ -167,11 +179,15 @@ def main():
                 # log.info("Nothing found.")
                 if read_byte=="".encode() and currently_playing != "":
                     #removed rfid card
-                    spotify_client.pause_playback(deviceId)
-                    previous_playing=currently_playing
-                    currently_playing=""
-                    time_since_pause=time.time()
-
+                    try:
+                        spotify_client.pause_playback(deviceId)
+                        previous_playing=currently_playing
+                        currently_playing=""
+                        time_since_pause=time.time()
+                    except ConnectionError:
+                        log.warning("Can not reach spotify api")
+                    except MaxRetryError:
+                        log.warning("Can not reach spotify api")                                 
             continue
 
     else:
