@@ -1,9 +1,11 @@
 import logging
 
+import random
+
 from flask import request
 from flask_restplus import Resource
 from box_rest_api.api.box.business import create_rfid_uri_mapping, update_rfid_uri_mapping, delete_rfid_uri_mapping
-from box_rest_api.api.box.serializers import rfid_uri_mapping, page_of_rfid_uri_mappings, uri_mapping
+from box_rest_api.api.box.serializers import rfid_uri_mapping, page_of_rfid_uri_mappings, uri_mapping, update_rfid_uri_mapping
 from box_rest_api.api.box.parsers import pagination_arguments
 from box_rest_api.api.restplus import api
 from box_rest_api.database.models import RFID_Uri_Mapping
@@ -35,17 +37,23 @@ class RFID_Uri_MappingItem(Resource):
 
     @api.marshal_with(uri_mapping)
     def get(self, rfid):
-        return RFID_Uri_Mapping.query.filter(RFID_Uri_Mapping.rfid == rfid).one()
+        result = RFID_Uri_Mapping.query.filter(RFID_Uri_Mapping.rfid == rfid).all()
+        if len(result) == 1:
+            return result[0]
 
-    @api.expect(uri_mapping)
+        #todo, add some real shuffel here.
+        return result[random.randint(0,len(result))]
+        
+
+    @api.expect(update_rfid_uri_mapping)
     @api.response(204, 'Entry successfully updated.')
-    def put(self, rfid):
+    def put(self, id):
         data = request.json
-        update_rfid_uri_mapping(rfid, data)
+        update_rfid_uri_mapping(id, data)
         return None, 204
 
     @api.response(204, 'Entry successfully deleted.')
-    def delete(self, rfid):
-        delete_rfid_uri_mapping(rfid)
+    def delete(self, id):
+        delete_rfid_uri_mapping(id)
         return None, 204
 

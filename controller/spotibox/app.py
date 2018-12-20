@@ -137,6 +137,7 @@ def main():
                             # examples for spotify_uris
                             # spotify:track:1QXZfEOtzM3Mzoy3VRTdXv
                             # spotify:album:0w0yDx8rVJeCtDbzovPveH
+                            # spotify:user:>>>USERNAME>>>:playlist:46dcjxN1KzrEjCCRF2dILY
 
                             # we have to call playback depending on the track elements...
 
@@ -167,13 +168,22 @@ def main():
                                         log.warning("Can not reach spotify api")
                                     except MaxRetryError:
                                         log.warning("Can not reach spotify api")                                 
-
+                                elif spotify_uri_type == 'user' and spotify_uri_elements[3] == 'playlist':
+                                    log.info("Play Playlist")
+                                    try:  
+                                        spotify_album_offset = album_meta['offset']
+                                        offset={}
+                                        offset['position'] = album_meta['offset']
+                                        spotify_client.start_playback(deviceId, spotify_uri, None, offset)
+                                        currently_playing = rfid
+                                    except ConnectionError:
+                                        log.warning("Can not reach spotify api")
+                                    except MaxRetryError:
+                                        log.warning("Can not reach spotify api")  
                                 else:
                                     log.warning("Not handled URI type: %s for uri %s ",spotify_uri_type, spotify_uri)
                             else:
-                                log.warning("Unkown URI format: %s ", spotify_uri)
-
-
+                                log.warning("Unkown / Unsupported URI format: %s ", spotify_uri)
                                 # else do nothing
             else:
                 # log.info("Nothing found.")

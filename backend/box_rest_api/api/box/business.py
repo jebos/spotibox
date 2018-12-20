@@ -15,8 +15,8 @@ def create_rfid_uri_mapping(data):
     db.session.commit()
 
 
-def update_rfid_uri_mapping(rfid, data):
-    mapping = RFID_Uri_Mapping.query.filter(RFID_Uri_Mapping.rfid == rfid).one()
+def update_rfid_uri_mapping(id, data):
+    mapping = RFID_Uri_Mapping.query.filter(RFID_Uri_Mapping.id == id).one()
     mapping.uri = data.get('uri')
     mapping.offset = data.get('offset')
 
@@ -27,8 +27,8 @@ def update_rfid_uri_mapping(rfid, data):
     db.session.commit()
 
 
-def delete_rfid_uri_mapping(rfid):
-    mapping = RFID_Uri_Mapping.query.filter(RFID_Uri_Mapping.rfid == rfid).one()
+def delete_rfid_uri_mapping(id):
+    mapping = RFID_Uri_Mapping.query.filter(RFID_Uri_Mapping.id == id).one()
 
     db.session.delete(mapping)
     db.session.commit()
