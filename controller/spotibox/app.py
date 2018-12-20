@@ -119,7 +119,7 @@ def main():
                     if r.status_code == 200:
                         album_meta = r.json()
 
-                        if album_meta["rfid"]==rfid and currently_playing != rfid:
+                        if currently_playing != rfid:
                             # start_playback(device_id=None, context_uri=None, uris=None, offset=None)
                             # Start or resume user’s playback.
                             # Provide a context_uri to start playback or a album, artist, or playlist.
